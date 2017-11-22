@@ -1,5 +1,13 @@
 package de.plushnikov.intellij.plugin.util;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiAnnotation;
@@ -9,24 +17,13 @@ import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.impl.source.SourceJavaCodeReference;
 import com.intellij.util.ArrayUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.regex.Pattern;
 
 public class PsiAnnotationSearchUtil {
   private static final Key<String> LOMBOK_ANNOTATION_FQN_KEY = Key.create("LOMBOK_ANNOTATION_FQN");
 
   @Nullable
-  public static PsiAnnotation findAnnotation(@NotNull PsiModifierListOwner psiModifierListOwner, @NotNull String annotationFQN) {
-    return findAnnotationQuick(psiModifierListOwner.getModifierList(), annotationFQN);
-  }
-
-  @Nullable
   public static PsiAnnotation findAnnotation(@NotNull PsiModifierListOwner psiModifierListOwner, @NotNull final Class<? extends Annotation> annotationType) {
-    return findAnnotationQuick(psiModifierListOwner.getModifierList(), annotationType.getName());
+    return findAnnotationQuick(psiModifierListOwner.getModifierList(), StringUtils.replace(annotationType.getName(), "$", "."));
   }
 
   @Nullable
@@ -37,7 +34,7 @@ public class PsiAnnotationSearchUtil {
 
     final String[] qualifiedNames = new String[annotationTypes.length];
     for (int i = 0; i < annotationTypes.length; i++) {
-      qualifiedNames[i] = annotationTypes[i].getName();
+      qualifiedNames[i] = StringUtils.replace(annotationTypes[i].getName(), "$", ".");
     }
     return findAnnotationQuick(psiModifierListOwner.getModifierList(), qualifiedNames);
   }

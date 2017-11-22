@@ -1,8 +1,8 @@
 package de.plushnikov.intellij.plugin.processor;
 
-import de.plushnikov.intellij.plugin.AbstractLombokParsingTestCase;
-
 import java.io.IOException;
+
+import de.plushnikov.intellij.plugin.AbstractLombokParsingTestCase;
 
 /**
  * Unit tests for IntelliJPlugin for Lombok, based on lombok test classes
@@ -108,6 +108,10 @@ public class BuilderTest extends AbstractLombokParsingTestCase {
   }
 
   public void testBuilder$BuilderGenericsOnConstructor() throws IOException {
+    doTest(true);
+  }
+
+  public void testBuilder$BuilderDefault() throws IOException {
     doTest(true);
   }
 }

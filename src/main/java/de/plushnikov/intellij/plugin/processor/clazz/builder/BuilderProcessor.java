@@ -1,5 +1,10 @@
 package de.plushnikov.intellij.plugin.processor.clazz.builder;
 
+import java.util.Collection;
+import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
@@ -7,6 +12,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
+
 import de.plushnikov.intellij.plugin.problem.ProblemBuilder;
 import de.plushnikov.intellij.plugin.processor.LombokPsiElementUsage;
 import de.plushnikov.intellij.plugin.processor.clazz.AbstractClassProcessor;
@@ -18,10 +24,6 @@ import de.plushnikov.intellij.plugin.util.PsiClassUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Singular;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Inspect and validate @Builder lombok annotation on a class.
@@ -52,9 +54,13 @@ public class BuilderProcessor extends AbstractClassProcessor {
   public Collection<PsiAnnotation> collectProcessedAnnotations(@NotNull PsiClass psiClass) {
     final Collection<PsiAnnotation> result = super.collectProcessedAnnotations(psiClass);
     for (PsiField psiField : PsiClassUtil.collectClassFieldsIntern(psiClass)) {
-      PsiAnnotation psiAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiField, Singular.class);
-      if (null != psiAnnotation) {
-        result.add(psiAnnotation);
+      PsiAnnotation singular = PsiAnnotationSearchUtil.findAnnotation(psiField, Singular.class);
+      if (null != singular) {
+        result.add(singular);
+      }
+      PsiAnnotation builderDefault = PsiAnnotationSearchUtil.findAnnotation(psiField, Builder.Default.class);
+      if (null != builderDefault) {
+        result.add(builderDefault);
       }
     }
     return result;
@@ -83,6 +89,8 @@ public class BuilderProcessor extends AbstractClassProcessor {
     builderHandler.createBuilderMethodIfNecessary(target, psiClass, null, builderClass, psiAnnotation);
 
     builderHandler.createToBuilderMethodIfNecessary(target, psiClass, null, builderClass, psiAnnotation);
+
+    builderHandler.createDefaultMethods(target, psiClass, psiAnnotation);
   }
 
   @Override

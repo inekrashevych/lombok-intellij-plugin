@@ -1,5 +1,15 @@
 package de.plushnikov.intellij.plugin.provider;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -16,21 +26,13 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.util.containers.ContainerUtil;
+
 import de.plushnikov.intellij.plugin.agent.transformer.ModifierVisibilityClassFileTransformer;
 import de.plushnikov.intellij.plugin.extension.LombokProcessorExtensionPoint;
 import de.plushnikov.intellij.plugin.processor.Processor;
 import de.plushnikov.intellij.plugin.processor.ValProcessor;
 import de.plushnikov.intellij.plugin.processor.modifier.ModifierProcessor;
 import de.plushnikov.intellij.plugin.settings.ProjectSettings;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Provides support for lombok generated elements
@@ -170,7 +172,7 @@ public class LombokAugmentProvider extends PsiAugmentProvider {
         log.debug(String.format("Process call for type: %s class: %s", type, psiClass.getQualifiedName()));
       }
 
-      final List<Psi> result = new ArrayList<Psi>();
+      final List<Psi> result = new ArrayList<>();
       final Collection<Processor> lombokProcessors = LombokProcessorProvider.getInstance(psiClass.getProject()).getLombokProcessors(type);
       for (Processor processor : lombokProcessors) {
         result.addAll((Collection<Psi>) processor.process(psiClass));

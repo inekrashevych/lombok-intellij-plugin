@@ -1,5 +1,10 @@
 package de.plushnikov.intellij.plugin.processor.handler.singular;
 
+import java.text.MessageFormat;
+import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.CommonClassNames;
@@ -13,6 +18,7 @@ import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiSubstitutor;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
+
 import de.plushnikov.intellij.plugin.processor.field.AccessorsInfo;
 import de.plushnikov.intellij.plugin.psi.LombokLightFieldBuilder;
 import de.plushnikov.intellij.plugin.psi.LombokLightMethodBuilder;
@@ -20,9 +26,6 @@ import de.plushnikov.intellij.plugin.util.PsiAnnotationUtil;
 import de.plushnikov.intellij.plugin.util.PsiMethodUtil;
 import de.plushnikov.intellij.plugin.util.PsiTypeUtil;
 import lombok.core.handlers.Singulars;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public abstract class AbstractSingularHandler implements BuilderElementHandler {
 
@@ -119,6 +122,7 @@ public abstract class AbstractSingularHandler implements BuilderElementHandler {
   private PsiCodeBlock createAllAddMethodCodeBlock(@NotNull PsiClass innerClass, boolean fluentBuilder, @NotNull String psiFieldName, @NotNull PsiType psiFieldType) {
     final String blockText;
     if (shouldGenerateFullBodyBlock) {
+      // TODO fix lombok.Builder.Default name$set initializations inside
       blockText = getAllMethodBody(psiFieldName, psiFieldType, innerClass.getManager(), fluentBuilder);
     } else {
       blockText = fluentBuilder ? "return this;" : "";
@@ -155,7 +159,8 @@ public abstract class AbstractSingularHandler implements BuilderElementHandler {
   }
 
   @Override
-  public void appendBuildCall(@NotNull StringBuilder buildMethodParameters, @NotNull String fieldName) {
-    buildMethodParameters.append(fieldName);
+  public void appendBuildCall(@NotNull StringBuilder buildMethodParameters, @NotNull String fieldName, String className, boolean builderDefault) {
+    buildMethodParameters.append(
+      builderDefault ? MessageFormat.format("this.{0}$set ? this.{0} : {1}.$default${0}()", fieldName, className) : fieldName);
   }
 }

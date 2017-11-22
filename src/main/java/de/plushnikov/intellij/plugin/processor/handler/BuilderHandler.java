@@ -1,5 +1,19 @@
 package de.plushnikov.intellij.plugin.processor.handler;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.endsWith;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.JavaPsiFacade;
@@ -21,6 +35,7 @@ import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.PsiTypeParameterListOwner;
 import com.intellij.psi.PsiVariable;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
+
 import de.plushnikov.intellij.plugin.problem.ProblemBuilder;
 import de.plushnikov.intellij.plugin.processor.ShouldGenerateFullCodeBlock;
 import de.plushnikov.intellij.plugin.processor.clazz.ToStringProcessor;
@@ -52,16 +67,6 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Handler methods for Builder-processing
@@ -89,8 +94,6 @@ public class BuilderHandler {
   private static final String BUILDER_OBTAIN_VIA_FIELD = "field";
   private static final String BUILDER_OBTAIN_VIA_METHOD = "method";
   private static final String BUILDER_OBTAIN_VIA_STATIC = "isStatic";
-  private static final String BUILDER_OBTAIN_VIA_ANNOTATION = Builder.ObtainVia.class.getName().replace("$", ".");
-
 
   private final ToStringProcessor toStringProcessor;
   private final NoArgsConstructorProcessor noArgsConstructorProcessor;
@@ -123,7 +126,7 @@ public class BuilderHandler {
       result = validateBuilderClassName(builderClassName, psiAnnotation.getProject(), problemBuilder) &&
         validateExistingBuilderClass(builderClassName, psiClass, problemBuilder) &&
         validateSingular(psiClass, problemBuilder) &&
-        validateObtainViaAnnotations(getBuilderFields(psiClass, Collections.<PsiField>emptySet(), AccessorsInfo.EMPTY), problemBuilder);
+        validateObtainViaAnnotations(getBuilderFields(psiClass, Collections.emptySet(), AccessorsInfo.EMPTY), problemBuilder);
     }
     return result;
   }
@@ -132,7 +135,7 @@ public class BuilderHandler {
     boolean result = true;
 
     final AccessorsInfo accessorsInfo = AccessorsInfo.build(psiClass);
-    final Collection<PsiField> builderFields = getBuilderFields(psiClass, Collections.<PsiField>emptySet(), accessorsInfo);
+    final Collection<PsiField> builderFields = getBuilderFields(psiClass, Collections.emptySet(), accessorsInfo);
     for (PsiVariable builderVariable : builderFields) {
       final PsiAnnotation singularAnnotation = PsiAnnotationSearchUtil.findAnnotation(builderVariable, Singular.class);
       if (null != singularAnnotation) {
@@ -197,7 +200,7 @@ public class BuilderHandler {
   private boolean validateObtainViaAnnotations(@NotNull Collection<? extends PsiVariable> psiVaraibles, @NotNull ProblemBuilder problemBuilder) {
     boolean result = true;
     for (PsiVariable psiVariable : psiVaraibles) {
-      final PsiAnnotation obtainViaAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiVariable, BUILDER_OBTAIN_VIA_ANNOTATION);
+      final PsiAnnotation obtainViaAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiVariable, Builder.ObtainVia.class);
       if (null != obtainViaAnnotation) {
         final String viaFieldName = PsiAnnotationUtil.getStringAnnotationValue(obtainViaAnnotation, BUILDER_OBTAIN_VIA_FIELD);
         final String viaMethodName = PsiAnnotationUtil.getStringAnnotationValue(obtainViaAnnotation, BUILDER_OBTAIN_VIA_METHOD);
@@ -328,7 +331,7 @@ public class BuilderHandler {
     final Collection<PsiType> types = new ArrayList<>();
     for (PsiVariable psiVariable : builderParameters) {
 
-      final PsiAnnotation obtainViaAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiVariable, BUILDER_OBTAIN_VIA_ANNOTATION);
+      final PsiAnnotation obtainViaAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiVariable, Builder.ObtainVia.class);
       if (null != obtainViaAnnotation) {
         final String viaFieldName = PsiAnnotationUtil.getStringAnnotationValue(obtainViaAnnotation, BUILDER_OBTAIN_VIA_FIELD);
 
@@ -372,10 +375,10 @@ public class BuilderHandler {
 
       if (null == psiMethod) {
         accessorsInfo = AccessorsInfo.build(psiClass);
-        builderVariables = getBuilderFields(psiClass, Collections.<PsiField>emptySet(), accessorsInfo);
+        builderVariables = getBuilderFields(psiClass, Collections.emptySet(), accessorsInfo);
       } else {
         accessorsInfo = AccessorsInfo.EMPTY;
-        builderVariables = getBuilderParameters(psiMethod, Collections.<PsiField>emptySet());
+        builderVariables = getBuilderParameters(psiMethod, Collections.emptySet());
       }
 
       final StringBuilder methodCalls = new StringBuilder();
@@ -384,7 +387,7 @@ public class BuilderHandler {
         methodCalls.append(accessorsInfo.removePrefix(psiVariable.getName()));
         methodCalls.append('(');
 
-        final PsiAnnotation obtainViaAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiVariable, BUILDER_OBTAIN_VIA_ANNOTATION);
+        final PsiAnnotation obtainViaAnnotation = PsiAnnotationSearchUtil.findAnnotation(psiVariable, Builder.ObtainVia.class);
         if (null != obtainViaAnnotation) {
           final String viaFieldName = PsiAnnotationUtil.getStringAnnotationValue(obtainViaAnnotation, BUILDER_OBTAIN_VIA_FIELD);
           final String viaMethodName = PsiAnnotationUtil.getStringAnnotationValue(obtainViaAnnotation, BUILDER_OBTAIN_VIA_METHOD);
@@ -446,7 +449,7 @@ public class BuilderHandler {
     builderClass.withMethods(createConstructors(builderClass, psiAnnotation));
 
     final AccessorsInfo accessorsInfo = AccessorsInfo.build(psiClass);
-    final Collection<PsiField> psiFields = getBuilderFields(psiClass, Collections.<PsiField>emptySet(), accessorsInfo);
+    final Collection<PsiField> psiFields = getBuilderFields(psiClass, Collections.emptySet(), accessorsInfo);
 
     final PsiSubstitutor builderSubstitutor = getBuilderSubstitutor(psiClass, builderClass);
     builderClass.withFields(generateFields(psiFields, builderClass, accessorsInfo, builderSubstitutor));
@@ -489,7 +492,8 @@ public class BuilderHandler {
       }
 
       handler.appendBuildPrepare(buildMethodPrepareString, psiVariable, fieldName);
-      handler.appendBuildCall(buildMethodParameterString, fieldName);
+      final boolean builderDefault = PsiAnnotationSearchUtil.isAnnotatedWith(psiVariable, Builder.Default.class);
+      handler.appendBuildCall(buildMethodParameterString, fieldName, psiParentClass.getName(), builderDefault);
       buildMethodParameterString.append(',');
     }
 
@@ -505,7 +509,9 @@ public class BuilderHandler {
     }
 
     if (!existedMethodNames.contains(ToStringProcessor.METHOD_NAME)) {
-      psiMethods.add(toStringProcessor.createToStringMethod(psiBuilderClass, Arrays.asList(psiBuilderClass.getFields()), psiAnnotation));
+      List<PsiField> nonSetterFields = Arrays.stream(psiBuilderClass.getFields()).filter(f -> !endsWith(f.getName(), "$set"))
+        .collect(toList());
+      psiMethods.add(toStringProcessor.createToStringMethod(psiBuilderClass, nonSetterFields, psiAnnotation));
     }
     return psiMethods;
   }
@@ -553,8 +559,9 @@ public class BuilderHandler {
       if (null != modifierList) {
         //Skip static fields.
         selectField = !modifierList.hasModifierProperty(PsiModifier.STATIC);
-        // skip initialized final fields
-        selectField &= !(null != psiField.getInitializer() && modifierList.hasModifierProperty(PsiModifier.FINAL));
+        boolean hasDefault = PsiAnnotationSearchUtil.isAnnotatedWith(psiField, Builder.Default.class);
+        boolean finalWithInitializer = psiField.hasInitializer() && modifierList.hasModifierProperty(PsiModifier.FINAL);
+        selectField &= hasDefault || !finalWithInitializer;
       }
       //Skip fields that start with $
       final String psiFieldName = psiField.getName();
@@ -711,5 +718,27 @@ public class BuilderHandler {
   private PsiType createSetterReturnType(@NotNull PsiAnnotation psiAnnotation, @NotNull PsiType fieldType) {
     final boolean isChain = PsiAnnotationUtil.getBooleanAnnotationValue(psiAnnotation, ANNOTATION_CHAIN, true);
     return isChain ? fieldType : PsiType.VOID;
+  }
+
+  public void createDefaultMethods(List<? super PsiElement> target, PsiClass psiClass, PsiAnnotation psiAnnotation) {
+    getBuilderFields(psiClass, Collections.emptyList(), AccessorsInfo.build(psiClass))
+      .stream()
+      .filter(f -> PsiAnnotationSearchUtil.isAnnotatedWith(f, Builder.Default.class))
+      .filter(PsiVariable::hasInitializer)
+      .forEach(psiField-> {
+        String name = AccessorsInfo.build(psiField).removePrefix(psiField.getName());
+        String methodName = "$default$" + name;
+        LombokLightMethodBuilder method = new LombokLightMethodBuilder(psiField.getManager(), methodName)
+          .withMethodReturnType(psiField.getType())
+          .withModifier(PsiModifier.PRIVATE)
+          .withModifier(PsiModifier.STATIC)
+          .withContainingClass(psiClass)
+          .withNavigationElement(psiField)
+          .withBody(PsiMethodUtil.createCodeBlockFromText(
+            String.format("return %s;", psiField.getInitializer().getText()),
+            psiClass));
+        target.add(method);
+      }
+    );
   }
 }

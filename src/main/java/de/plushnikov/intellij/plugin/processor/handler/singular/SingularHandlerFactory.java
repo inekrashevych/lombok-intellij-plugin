@@ -1,16 +1,18 @@
 package de.plushnikov.intellij.plugin.processor.handler.singular;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
-import de.plushnikov.intellij.plugin.util.PsiTypeUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import de.plushnikov.intellij.plugin.util.PsiTypeUtil;
 
 public class SingularHandlerFactory {
 
@@ -57,7 +59,8 @@ public class SingularHandlerFactory {
   }
 
   @NotNull
-  public static BuilderElementHandler getHandlerFor(@NotNull PsiVariable psiVariable, @Nullable PsiAnnotation singularAnnotation, boolean shouldGenerateFullBodyBlock) {
+  public static BuilderElementHandler getHandlerFor(@NotNull PsiVariable psiVariable, @Nullable PsiAnnotation singularAnnotation,
+                                                    boolean shouldGenerateFullBodyBlock) {
     if (null == singularAnnotation) {
       return new NonSingularHandler(shouldGenerateFullBodyBlock);
     }

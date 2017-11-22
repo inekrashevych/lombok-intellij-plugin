@@ -1,5 +1,12 @@
 package de.plushnikov.intellij.plugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -16,13 +23,8 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 import com.intellij.util.PathUtil;
-import junit.framework.ComparisonFailure;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
+import junit.framework.ComparisonFailure;
 
 public abstract class AbstractLombokLightCodeInsightTestCase extends LightCodeInsightFixtureTestCase {
   private static final String LOMBOK_SRC_PATH = "./generated/src/lombok";

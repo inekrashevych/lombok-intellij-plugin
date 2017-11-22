@@ -41,4 +41,8 @@ public class DelombokBuilderActionTest extends LombokLightActionTestCase {
   public void testBuilderSingularMap() throws Exception {
     doTest();
   }
+
+  public void testBuilderDefault() throws Exception {
+    doTest();
+  }
 }
